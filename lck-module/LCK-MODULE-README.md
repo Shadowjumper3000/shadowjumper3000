@@ -1,31 +1,178 @@
 # LCK League of Legends Waybar Module
 
-Waybar module to display League of Legends LCK (League Champions Korea) live game scores, kill counts, and upcoming matches.
+Waybar module to display League of Legends LCK (League Champions Korea) live game information, series scores, and upcoming match timers.
 
-## Features
+## ✨ Features
 
-- ✨ Shows live LCK games in real-time with 🔴 indicator
-- 📊 **Displays kill counts during live matches** (format: `🔴 T1 [5] vs [3] GEN.G`)
-- 🎯 **Multiple match support** - Shows count of additional games (+1, +2, etc.)
-- 🔄 **Right-click match selection** - Choose which game to display when multiple are running
-- ⏱️ Displays upcoming LCK matches  
-- 📊 Pulls data from the official LoL Esports API
-- ⚡ Caching for optimal performance (30-60s TTL)
-- 🎨 Beautiful styling with live game animations
-- 🔗 One-click access to live viewer page
-- 📲 Tooltip with match information
+- **🔴 Live Match Display** - Shows live LCK matches with indicator
+- **🏆 Series Score** - Displays current series score (e.g., `[1] vs [1]`)
+- **⏱️ Upcoming Timer** - Shows countdown to next match (e.g., "in 2h 30m")
+- **🎯 Auto-Hide** - Module hidden when no game is live or upcoming (within 24h)
+- **📊 Hover Info** - Detailed tooltip with season records and schedule
+- **🔄 Multiple Match Support** - Right-click to select which game to display
+- **🖱️ One-Click Access** - Click to open LoL Esports watch page
+- **⚡ Caching** - Optimized with 30-60s TTL caching
+- **🎨 Beautiful Styling** - CSS animations for live indicator
 
-## API Used
+## API Data Used
 
-This module uses the **Unofficial LoL Esports API** (`esports-api.lolesports.com`) which provides:
-- Live match schedules
-- Team information
-- Match status and scores
-- Game state updates with kill counts
+This module uses the **Official LoL Esports API** (`esports-api.lolesports.com`) which provides:
 
-API Endpoints:
-- `https://esports-api.lolesports.com/persisted/gw/getSchedule?hl=en-US` - Schedule data
-- `https://esports-api.lolesports.com/persisted/gw/getLive?hl=en-US` - Live game data with kill counts
+### Live Games Endpoint
+- **URL**: `https://esports-api.lolesports.com/persisted/gw/getLive?hl=en-US`
+- **Data**: Live match state, teams, current series-wins, season records, game state
+- **Cache**: 30 seconds
+
+### Schedule Endpoint  
+- **URL**: `https://esports-api.lolesports.com/persisted/gw/getSchedule?hl=en-US`
+- **Data**: All LCK matches, start times, team info, season records
+- **Cache**: 60 seconds
+
+👉 **See [API-REFERENCE.md](API-REFERENCE.md)** for complete API response structure and all available fields.
+
+## 📋 Available Data
+
+### ✅ Displayed Information
+- **Team Codes/Names** - 3-letter codes (T1, GEN, DRX, etc.) and full names
+- **Series Score** - Match wins in current best-of series
+- **Season Record** - Team wins and losses for the season
+- **Match Status** - Which game in series is live (Game 1, 2, 3, etc.)
+- **Countdown Timer** - Time until next match
+- **Block Name** - Week/Round information (Week 2, Playoffs, etc.)
+
+### ❌ Data NOT in API
+- Kill counts (would require separate game stats API)
+- Gold amounts (not provided)
+- Tower/Turret counts (not provided)
+- Champion picks/bans (not provided)
+- Map state/objective data (not provided)
+
+## Display Behavior
+
+| Scenario | Display | Click | Hover |
+|----------|---------|-------|-------|
+| **Game Live** | 🔴 T1 [2] vs [1] GEN | Open stream | Season records, game #, block |
+| **Multiple Live** | +1, +2 badges | Choose match | Details of selected match |
+| **No game, next < 24h** | ⏱️ T1 vs GEN in 2h 30m | Open stream | Upcoming schedule |
+| **No game, next ≥ 24h** | **HIDDEN** | N/A | N/A |
+| **No schedule** | **HIDDEN** | N/A | N/A |
+
+## 📦 Installation
+
+### 1. Install Files
+
+```bash
+# Copy scripts to local bin
+cp lck-module/lck-scores.sh ~/.local/bin/
+cp lck-module/lck-select-match.sh ~/.local/bin/
+chmod +x ~/.local/bin/lck-*.sh
+```
+
+Or reference directly from the repo:
+```bash
+# Use these paths in waybar config if not copying
+$HOME/dev/shadowjumper3000/lck-module/lck-scores.sh
+$HOME/dev/shadowjumper3000/lck-module/lck-select-match.sh
+```
+
+### 2. Add to Waybar Config
+
+Edit `~/.config/waybar/config.jsonc`:
+
+```jsonc
+{
+  "modules-right": [
+    // ... other modules ...
+    "custom/lck",
+  ],
+  
+  "custom/lck": {
+    "format": "{0}",
+    "exec": "$HOME/dev/shadowjumper3000/lck-module/lck-scores.sh",
+    "interval": 30,
+    "return-type": "plain",
+    "on-click": "xdg-open 'https://watch.lolesports.com' &",
+    "on-right-click": "$HOME/dev/shadowjumper3000/lck-module/lck-select-match.sh",
+    "tooltip": true,
+    "tooltip-format": "{1}\\n{2}\\n{3}",
+    "class": "lck-module"
+  }
+}
+```
+
+### 3. Add CSS Styling
+
+Edit `~/.config/waybar/style.css` and add:
+
+```bash
+cat lck-module/waybar-lck-style.css >> ~/.config/waybar/style.css
+```
+
+Or manually append from [waybar-lck-style.css](waybar-lck-style.css)
+
+### 4. Reload Waybar
+
+```bash
+pkill -RTMIN+1 waybar
+```
+
+## 🎮 Usage
+
+- **Left-click** - Open LoL Esports watch page
+- **Right-click** - Select different live match (if multiple running)
+- **Hover** - See detailed information and upcoming schedule
+- **Auto-refresh** - Updates every 30 seconds
+
+## 🔧 Customization
+
+### Change Update Interval
+Edit the `interval` in waybar config (in seconds):
+```jsonc
+"interval": 20,  // Update every 20 seconds instead of 30
+```
+
+### Customize Display Format
+Edit the `format` field or the Python script in `lck-scores.sh` to change output format.
+
+### Adjust Click Behavior
+Modify `on-click` to open different URL or run different command:
+```jsonc
+"on-click": "xdg-open 'https://twitch.tv/lck1' &",
+```
+
+## 📁 Files Included
+
+- **lck-scores.sh** - Main display script with live/upcoming logic
+- **lck-select-match.sh** - Right-click match selection menu
+- **waybar-lck-module.jsonc** - Waybar module configuration
+- **waybar-lck-style.css** - CSS styling and animations
+- **API-REFERENCE.md** - Complete API response documentation
+- **LCK-MODULE-README.md** - This file
+
+## 🐛 Troubleshooting
+
+### Module not showing
+1. Check cache: `ls -la ~/.cache/lck-scores/`
+2. Manually run: `bash lck-module/lck-scores.sh`
+3. Reload Waybar: `pkill -RTMIN+1 waybar`
+
+### API call failing
+1. Check internet: `curl -I https://esports-api.lolesports.com`
+2. Check headers: `curl -v https://esports-api.lolesports.com/persisted/gw/getLive?hl=en-US`
+3. Check logs: `journalctl -u waybar -f`
+
+### Tooltip not showing
+1. Ensure `tooltip: true` in config
+2. Check `tooltip-format` syntax (use `\n` for newlines)
+3. Verify Python script outputs multiple lines
+
+## 📜 License
+
+Use freely for personal setups
+
+## 🤝 Contributing
+
+Issues and improvements welcome!
 
 ## Files Included
 

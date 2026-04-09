@@ -1,4 +1,11 @@
-// Waybar LCK Scores Module with Kill Counts and Match Selection
+// Waybar LCK Scores Module - Updated with Smart Display
+// Shows live matches with series score or upcoming match timer
+// - Shows teams + match wins when game is live
+// - Shows countdown timer when upcoming match within 24h
+// - Hidden by default when no relevant game (auto-hides)
+// - Hover shows detailed season records and schedule
+// - Right-click to select which game to display (if multiple live)
+//
 // Add this to your ~/.config/waybar/config.jsonc
 
 {
@@ -6,21 +13,9 @@
     "format": "{}",
     "exec": "$HOME/dev/shadowjumper3000/lck-module/lck-scores.sh",
     "interval": 30,
-    "return-type": "plain",
-    "on-click": "$HOME/dev/shadowjumper3000/lck-module/lck-scores.sh refresh && pkill -RTMIN+1 waybar && xdg-open 'https://andydanger.github.io/live-lol-esports/'",
+    "return-type": "json",
+    "on-click": "xdg-open 'https://watch.lolesports.com' &",
     "on-right-click": "$HOME/dev/shadowjumper3000/lck-module/lck-select-match.sh",
-    "tooltip": true,
-    "tooltip-format": "{}",
     "class": "lck-module"
-  }
-  ,
-  "custom/lck-live": {
-    "format": "{}",
-    "exec": "$HOME/dev/shadowjumper3000/lck-module/lck-live-feed.sh",
-    "interval": 15,
-    "return-type": "plain",
-    "tooltip": true,
-    "tooltip-format": "{}",
-    "class": "lck-module lck-live"
   }
 }
