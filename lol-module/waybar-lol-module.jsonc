@@ -1,0 +1,22 @@
+// Waybar LoL Scores Module - Updated with Smart Display
+// Shows live matches across all LoL regions with series score or upcoming match timer
+// - Shows teams + match wins when game is live
+// - Shows countdown timer when upcoming match within 24h
+// - Hidden by default when no relevant game (auto-hides)
+// - Hover shows detailed tournament stage, season records and schedule
+// - Right-click to select which game to display (if multiple live)
+// - Supports all regions: LCK, LPL, LCL, PCS, VCS, CBLOL, etc.
+//
+// Add this to your ~/.config/waybar/config.jsonc
+
+{
+  "custom/lol": {
+    "format": "{}",
+    "exec": "$HOME/dev/shadowjumper3000/lol-module/lol-scores.sh",
+    "interval": 30,
+    "return-type": "json",
+    "on-click": "xdg-open 'https://watch.lolesports.com' &",
+    "on-right-click": "$HOME/dev/shadowjumper3000/lol-module/lol-select-match.sh",
+    "class": "lol-module"
+  }
+}

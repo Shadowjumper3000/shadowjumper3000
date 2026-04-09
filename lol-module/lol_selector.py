@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-LCK Match Selector - Match toggling logic
-Handles cycling through live matches
+LoL Esports Match Selector - Match toggling logic
+Handles cycling through live matches across all leagues
 """
 
 import json
@@ -9,14 +9,14 @@ import os
 import sys
 
 
-class LCKMatchSelector:
+class LolMatchSelector:
     """Handle match selection and toggling"""
 
     def __init__(self):
         self.cache_dir = os.path.expanduser(
-            os.environ.get("LCK_CACHE_DIR", "~/.cache/lck-scores")
+            os.environ.get("CACHE_DIR", "~/.cache/lol-scores")
         )
-        self.live_cache = os.path.join(self.cache_dir, "lck-live-games.json")
+        self.live_cache = os.path.join(self.cache_dir, "lol-live-games.json")
         self.selection_file = os.path.join(self.cache_dir, "selected-match.txt")
 
     @staticmethod
@@ -29,14 +29,13 @@ class LCKMatchSelector:
             return {}
 
     def get_live_matches(self):
-        """Extract all live LCK matches"""
+        """Extract all live matches across all regions"""
         data = self._load_json(self.live_cache)
 
         matches = []
         for event in data.get("data", {}).get("schedule", {}).get("events", []):
             league = event.get("league", {})
-            if "lck" not in league.get("name", "").lower():
-                continue
+            league_name = league.get("name", "")
 
             state = event.get("state", "").lower()
             if "inprog" not in state:
@@ -54,7 +53,11 @@ class LCKMatchSelector:
             gw2 = teams[1].get("result", {}).get("gameWins", 0)
 
             matches.append(
-                {"id": match_id, "display": f"{t1_code} [{gw1}] vs [{gw2}] {t2_code}"}
+                {
+                    "id": match_id,
+                    "league": league_name,
+                    "display": f"{league_name}: {t1_code} [{gw1}] vs [{gw2}] {t2_code}",
+                }
             )
 
         return matches
@@ -82,25 +85,20 @@ class LCKMatchSelector:
 
         # Toggle to next match
         next_idx = (current_idx + 1) % len(matches)
-        next_id = matches[next_idx]["id"]
-        next_display = matches[next_idx]["display"]
+        next_match_id = matches[next_idx]["id"]
 
-        # Save selection
-        with open(self.selection_file, "w") as f:
-            f.write(next_id)
-
-        # Output message
-        if len(matches) > 1:
-            print(f"Switched to: {next_display}")
-        else:
-            print(f"Only match: {next_display}")
-
-        return True
+        try:
+            with open(self.selection_file, "w") as f:
+                f.write(next_match_id)
+            print(f"Switched to: {matches[next_idx]['display']}")
+            return True
+        except:
+            return False
 
 
 def main():
     """Main entry point"""
-    selector = LCKMatchSelector()
+    selector = LolMatchSelector()
     selector.toggle_to_next()
 
 

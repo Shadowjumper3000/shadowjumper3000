@@ -1,11 +1,11 @@
-# LCK Module - Complete API Reference
+# LoL Module - Complete API Reference
 
 ## API Endpoints
 
 ### 1. Live Games Endpoint
 **URL**: `https://esports-api.lolesports.com/persisted/gw/getLive?hl=en-US`
 
-**Purpose**: Get currently live and recently completed LCK matches
+**Purpose**: Get currently live and recently completed matches across all LoL regions
 
 **Cache TTL**: 30 seconds
 
@@ -32,11 +32,11 @@
           
           // League information
           "league": {
-            "id": "string (98767991310872058 for LCK)",
-            "slug": "string (lck)",
-            "name": "string (LCK)",
-            "image": "string (URL to league logo)",
-            "priority": number (1 for LCK),
+            "id": "string (98767991310872058 for LCK, varies by league)",
+            "slug": "string (lck, lpl, lcl, etc)",
+            "name": "string (LCK, LPL, LCL, etc)",
+            "image": "string (league logo URL)",
+            "priority": number (1 for LCK, varies by league),
             "displayPriority": {
               "position": number,
               "status": "string"
@@ -120,7 +120,7 @@
           // Broadcast streams
           "streams": [
             {
-              "parameter": "string (lck, aflol, otplol_)",
+              "parameter": "string (lck, lpl, lcl, pcs, vcs, cblol, etc)",
               "locale": "string (en-US, ko-KR, fr-FR, etc)",
               "mediaLocale": {
                 "locale": "string",
@@ -145,7 +145,7 @@
 ### 2. Schedule Endpoint
 **URL**: `https://esports-api.lolesports.com/persisted/gw/getSchedule?hl=en-US`
 
-**Purpose**: Get full LCK season schedule including upcoming and past matches
+**Purpose**: Get full season schedule including upcoming and past matches across all regions
 
 **Cache TTL**: 60 seconds
 
@@ -166,8 +166,8 @@
           // League information
           "league": {
             "id": "string",
-            "slug": "string (lck)",
-            "name": "string (LCK)",
+            "slug": "string (lck, lpl, lcl, etc)",
+            "name": "string (LCK, LPL, LCL, etc)",
             "image": "string (URL)",
             "priority": number,
             "displayPriority": { ... }

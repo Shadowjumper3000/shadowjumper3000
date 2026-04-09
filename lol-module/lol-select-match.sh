@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# LCK Match Selector - Right-click handler
-# Toggles between multiple live matches
+# LoL Esports Match Selector - Right-click handler
+# Toggles between multiple live matches across all LoL Esports regions
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
 fi
 
 # Run match selector Python module
-python3 "$SCRIPT_DIR/lck_selector.py"
+python3 "$SCRIPT_DIR/lol_selector.py"
 
 # Refresh waybar to show updated match
 pkill -RTMIN+1 waybar 2>/dev/null || true
@@ -27,7 +27,7 @@ pkill -RTMIN+1 waybar 2>/dev/null || true
         selected=$(echo -e "$menu_options" | dmenu -p "Select Match:")
     else
         # Fallback: just show notification with all matches
-        notify-send "LCK" "Available matches:\n$menu_options" -u normal
+        notify-send "LoL Esports" "Available matches:\n$menu_options" -u normal
         exit 1
     fi
     
@@ -38,7 +38,7 @@ pkill -RTMIN+1 waybar 2>/dev/null || true
             selected_num=$((selected_num - 1))
             if [[ -n "${match_map[$selected_num]:-}" ]]; then
                 echo "${match_map[$selected_num]}" > "$SELECTION_FILE"
-                notify-send "LCK" "Now showing: $selected" -u low
+                notify-send "LoL Esports" "Now showing: $selected" -u low
             fi
         fi
     fi
@@ -51,7 +51,7 @@ pkill -RTMIN+1 waybar 2>/dev/null || true
 matches=$(get_live_matches)
 
 if [[ -z "$matches" ]]; then
-    notify-send "LCK" "No live LCK matches" -u low
+    notify-send "LoL Esports" "No live matches" -u low
     exit 1
 fi
 

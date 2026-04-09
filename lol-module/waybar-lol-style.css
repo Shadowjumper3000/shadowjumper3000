@@ -1,9 +1,9 @@
-/* Waybar LCK Module Styling
-   Add this to your ~/.config/waybar/style.css
+/* Waybar LoL Module Styling
+  Add this to your ~/.config/waybar/style.css
 */
 
-/* LCK Module Base */
-#custom-lck {
+/* LoL Esports Module Base */
+#custom-lol {
   margin: 0 10px;
   padding: 0 10px;
   border-radius: 8px;
@@ -12,7 +12,7 @@
 }
 
 /* Base styling */
-#custom-lck {
+#custom-lol {
   background-color: #2e3440;
   color: #eceff4;
   font-weight: 600;
@@ -20,35 +20,35 @@
 }
 
 /* Live game styling */
-#custom-lck.lck-live {
+#custom-lol.lol-live {
   background: linear-gradient(90deg, #bf616a 0%, #d08770 100%);
   color: #eceff4;
   animation: pulse-live 1.5s ease-in-out infinite;
 }
 
 /* Upcoming game styling */
-#custom-lck.lck-upcoming {
+#custom-lol.lol-upcoming {
   background-color: #a3be8c;
   color: #2e3440;
 }
 
 /* Offline/no games styling */
-#custom-lck.lck-offline {
+#custom-lol.lol-offline {
   background-color: #4c566a;
   color: #d8dee9;
   opacity: 0.7;
 }
 
 /* Hover effects */
-#custom-lck:hover {
+#custom-lol:hover {
   background-color: #3b4252;
 }
 
-#custom-lck.lck-live:hover {
+#custom-lol.lol-live:hover {
   background: linear-gradient(90deg, #d08770 0%, #bf616a 100%);
 }
 
-#custom-lck.lck-upcoming:hover {
+#custom-lol.lol-upcoming:hover {
   background-color: #b8cfa0;
 }
 
@@ -75,6 +75,6 @@
   }
 }
 
-#custom-lck.lck-live:focus {
+#custom-lol.lol-live:focus {
   animation: live-indicator 2s infinite;
 }

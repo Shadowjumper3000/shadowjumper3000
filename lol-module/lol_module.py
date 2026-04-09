@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
 """
-LCK Module - Core Display Logic
-Handles fetching and processing LCK match data from the LoL Esports API
+LoL Esports Module - Core Display Logic
+Handles fetching and processing match data from the LoL Esports API for all regions/leagues
 """
 
 import json
-import sys
 import os
+import subprocess
 from datetime import datetime, timezone
 
 
-class LCKModule:
-    """Main LCK module for displaying match information"""
+class LolModule:
+    """Main LoL Esports module for displaying match information across all leagues"""
 
     def __init__(self, config_dir=None):
         self.config_dir = config_dir or os.path.dirname(os.path.abspath(__file__))
         self.cache_dir = os.path.expanduser(
-            os.environ.get("LCK_CACHE_DIR", "~/.cache/lck-scores")
+            os.environ.get("CACHE_DIR", "~/.cache/lol-scores")
         )
-        self.live_cache = os.path.join(self.cache_dir, "lck-live-games.json")
-        self.schedule_cache = os.path.join(self.cache_dir, "lck-data.json")
+        self.live_cache = os.path.join(self.cache_dir, "lol-live-games.json")
+        self.schedule_cache = os.path.join(self.cache_dir, "lol-data.json")
         self.selection_file = os.path.join(self.cache_dir, "selected-match.txt")
+        self.state_cache = os.path.join(self.cache_dir, "match-state.json")
 
         os.makedirs(self.cache_dir, exist_ok=True)
 
         self.live_data = self._load_json(self.live_cache)
         self.sched_data = self._load_json(self.schedule_cache)
+        self.previous_state = self._load_json(self.state_cache)
 
     @staticmethod
     def _load_json(filepath):
@@ -100,6 +102,16 @@ class LCKModule:
             return (record.get("wins", 0), record.get("losses", 0))
         return (0, 0)
 
+    @staticmethod
+    def center_text(text, width=60):
+        """Center align text by adding spaces"""
+        lines = text.split("\n")
+        centered_lines = []
+        for line in lines:
+            padding = max(0, (width - len(line)) // 2)
+            centered_lines.append(" " * padding + line)
+        return "\n".join(centered_lines)
+
     def get_current_game_number(self, match):
         """Get which game in the series is currently in progress"""
         if not isinstance(match, dict):
@@ -110,17 +122,99 @@ class LCKModule:
                 return game.get("number", 0)
         return 0
 
+    def get_game_elapsed_time(self, start_time_str):
+        """Calculate elapsed time since match start (approx game length)"""
+        try:
+            start_dt = self.parse_iso(start_time_str)
+            if not start_dt:
+                return None
+            now = datetime.now(timezone.utc)
+            elapsed = (now - start_dt).total_seconds() / 60  # Convert to minutes
+            if elapsed < 0:
+                return None
+            minutes = int(elapsed)
+            seconds = int((elapsed % 1) * 60)
+            return f"{minutes}:{seconds:02d}"
+        except:
+            return None
+
+    def send_notification(self, title, body):
+        """Send desktop notification using notify-send"""
+        try:
+            subprocess.run(
+                ["notify-send", "-u", "normal", title, body], check=False, timeout=2
+            )
+        except Exception:
+            pass
+
+    def save_state(self, state):
+        """Save current match state for comparison"""
+        try:
+            with open(self.state_cache, "w") as f:
+                json.dump(state, f)
+        except Exception:
+            pass
+
+    def check_for_victories(self, live_matches):
+        """Check if any matches or games have been won"""
+        if not os.environ.get("ENABLE_NOTIFICATIONS", "true").lower() == "true":
+            return
+
+        for match in live_matches:
+            match_id = match.get("id", "")
+            if not match_id:
+                continue
+
+            prev_match = self.previous_state.get(match_id, {})
+            prev_gw1 = prev_match.get("gw1", 0)
+            prev_gw2 = prev_match.get("gw2", 0)
+            curr_gw1 = match.get("gw1", 0)
+            curr_gw2 = match.get("gw2", 0)
+
+            # Detect match victories first (series won - typically best of 3, so 2 wins)
+            match_victory = False
+            if os.environ.get("NOTIFY_MATCH_VICTORIES", "true").lower() == "true":
+                if curr_gw1 >= 2 and prev_gw1 < 2:
+                    self.send_notification(
+                        f"🏆 {match['t1_name']} WINS THE MATCH!",
+                        f"{match['t1_name']} defeats {match['t2_name']}\nFinal: {curr_gw1}-{curr_gw2}",
+                    )
+                    match_victory = True
+                if curr_gw2 >= 2 and prev_gw2 < 2:
+                    self.send_notification(
+                        f"🏆 {match['t2_name']} WINS THE MATCH!",
+                        f"{match['t2_name']} defeats {match['t1_name']}\nFinal: {curr_gw1}-{curr_gw2}",
+                    )
+                    match_victory = True
+
+            # Detect game wins only if no match victory just happened
+            if (
+                not match_victory
+                and os.environ.get("NOTIFY_GAME_WINS", "true").lower() == "true"
+            ):
+                if curr_gw1 > prev_gw1:
+                    self.send_notification(
+                        f"🎮 {match['t1_code']} wins a game!",
+                        f"{match['t1_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                    )
+                if curr_gw2 > prev_gw2:
+                    self.send_notification(
+                        f"🎮 {match['t2_code']} wins a game!",
+                        f"{match['t2_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                    )
+
     def get_live_matches(self):
-        """Find all currently live LCK matches"""
+        """Find all currently live matches across all regions"""
         now = datetime.now(timezone.utc)
         live_matches = []
 
         for event in self.get_events(self.live_data):
             league = event.get("league", {})
-            lname = league.get("name", "").lower() if isinstance(league, dict) else ""
+            lname = league.get("name", "") if isinstance(league, dict) else ""
             status = event.get("state", "").lower()
 
-            if "lck" not in lname or "inprog" not in status:
+            # Skip if not in progress
+            if "inprog" not in status:
                 continue
 
             match = event.get("match", {})
@@ -136,10 +230,14 @@ class LCKModule:
             rec1 = self.get_record(t1)
             rec2 = self.get_record(t2)
             game_num = self.get_current_game_number(match)
+            start_time = event.get("startTime", "")
+            block_name = event.get("blockName", "")
 
             live_matches.append(
                 {
                     "id": match.get("id", ""),
+                    "league": lname,
+                    "block_name": block_name,
                     "t1_code": t1_code,
                     "t2_code": t2_code,
                     "t1_name": self.get_team_name(t1),
@@ -150,8 +248,6 @@ class LCKModule:
                     "rec2": rec2,
                     "game_num": game_num,
                     "display": f"{t1_code} [{gw1}] vs [{gw2}] {t2_code}",
-                    "tooltip_title": f"Game {game_num} - {self.get_team_name(t1)} vs {self.get_team_name(t2)}",
-                    "tooltip_info": f"{t1_code} ({rec1[0]}-{rec1[1]}) vs {t2_code} ({rec2[0]}-{rec2[1]})",
                 }
             )
 
@@ -160,15 +256,14 @@ class LCKModule:
     def get_next_upcoming_match(self):
         """Find next upcoming match within configured hours"""
         now = datetime.now(timezone.utc)
-        max_hours = int(os.environ.get("LCK_SHOW_UPCOMING_HOURS", 24))
+        max_hours = int(os.environ.get("SHOW_UPCOMING_HOURS", 24))
         max_seconds = max_hours * 3600
 
         upcoming_matches = []
 
         for event in self.get_events(self.sched_data):
             league = event.get("league", {})
-            if "lck" not in league.get("name", "").lower():
-                continue
+            lname = league.get("name", "") if isinstance(league, dict) else ""
 
             dt = self.parse_iso(event.get("startTime"))
             state = event.get("state", "").lower()
@@ -180,16 +275,16 @@ class LCKModule:
             if time_until > max_seconds or time_until <= 0:
                 continue
 
-            upcoming_matches.append((dt, event))
+            upcoming_matches.append((dt, event, lname))
 
         if not upcoming_matches:
             return None, []
 
         # Sort by time and get first
         upcoming_matches.sort(key=lambda x: x[0])
-        next_dt, next_event = upcoming_matches[0]
+        next_dt, next_event, next_league = upcoming_matches[0]
 
-        return (next_dt, next_event), upcoming_matches
+        return (next_dt, next_event, next_league), upcoming_matches
 
     def get_selected_match_index(self, live_matches):
         """Get the index of the selected match or default to 0"""
@@ -215,23 +310,44 @@ class LCKModule:
 
         # Get selected match
         selected_idx = self.get_selected_match_index(live_matches)
-        match = live_matches[selected_idx]
+        selected = live_matches[selected_idx]
 
-        # Build tooltip
-        tooltip_lines = [match["tooltip_title"], match["tooltip_info"]]
+        # Get primary block name from selected match
+        block_name = selected.get("block_name", "Live")
+
+        # Build main tooltip - selected game info
+        selected_tooltip = f"{selected['t1_name']} ({selected['t1_code']}, {selected['rec1'][0]}-{selected['rec1'][1]}) vs {selected['t2_name']} ({selected['t2_code']}, {selected['rec2'][0]}-{selected['rec2'][1]})"
+
+        tooltip_lines = [selected_tooltip]
 
         # Show if there are other matches
         if len(live_matches) > 1:
-            other_count = len(live_matches) - 1
-            tooltip_lines.append(
-                f"\n+{other_count} other match{'es' if other_count > 1 else ''} live"
-            )
+            # Group other matches by league
+            by_league = {}
+            for match in live_matches:
+                if match["id"] != selected["id"]:
+                    league = match["league"]
+                    if league not in by_league:
+                        by_league[league] = []
+                    by_league[league].append(match)
+
+            tooltip_lines.append("")
+            tooltip_lines.append("Other Matches:")
+
+            # Add matches grouped by league
+            for league in sorted(by_league.keys()):
+                for idx, match in enumerate(by_league[league], 1):
+                    tooltip_lines.append(
+                        f"{league}: {match['t1_code']} [{match['gw1']}] vs [{match['gw2']}] {match['t2_code']}"
+                    )
+
+            tooltip_lines.append("")
             tooltip_lines.append("(Right-click to switch)")
 
         return {
-            "text": match["display"],
-            "tooltip": "\n".join(tooltip_lines),
-            "class": "lck-live",
+            "text": selected["display"],
+            "tooltip": self.center_text(f"{block_name}\n" + "\n".join(tooltip_lines)),
+            "class": "lol-live",
         }
 
     def output_upcoming_match(self):
@@ -241,7 +357,7 @@ class LCKModule:
         if not next_match_info:
             return None
 
-        next_dt, next_event = next_match_info
+        next_dt, next_event, next_league = next_match_info
         now = datetime.now(timezone.utc)
 
         match = next_event.get("match", {})
@@ -256,6 +372,7 @@ class LCKModule:
         countdown = self.format_countdown((next_dt - now).total_seconds())
         rec1 = self.get_record(teams[0])
         rec2 = self.get_record(teams[1])
+        block_name = next_event.get("blockName", "Upcoming")
 
         main = f"⏱️ {t1_code} vs {t2_code} (in {countdown})"
         tooltip_lines = [
@@ -267,23 +384,34 @@ class LCKModule:
         if len(upcoming_matches) > 1:
             tooltip_lines.append("")
             tooltip_lines.append("Next matches:")
-            for dt, evt in upcoming_matches[1:3]:
+            for dt, evt, league in upcoming_matches[1:3]:
                 m = evt.get("match", {})
                 ts = evt.get("teams", [])
                 if len(ts) >= 2:
                     time_until = self.format_countdown((dt - now).total_seconds())
                     tooltip_lines.append(
-                        f"  {self.get_team_code(ts[0])} vs {self.get_team_code(ts[1])} (in {time_until})"
+                        f"  {league}: {self.get_team_code(ts[0])} vs {self.get_team_code(ts[1])} (in {time_until})"
                     )
 
         return {
             "text": main,
-            "tooltip": "\n".join(tooltip_lines),
-            "class": "lck-upcoming",
+            "tooltip": self.center_text(f"{block_name}\n" + "\n".join(tooltip_lines)),
+            "class": "lol-upcoming",
         }
 
     def display(self):
         """Display module output"""
+        # Check for match victories and game wins
+        live_matches = self.get_live_matches()
+        if live_matches:
+            self.check_for_victories(live_matches)
+
+            # Save current state for next comparison
+            state_dict = {
+                m["id"]: {"gw1": m["gw1"], "gw2": m["gw2"]} for m in live_matches
+            }
+            self.save_state(state_dict)
+
         # Try live match first
         live_output = self.output_live_match()
         if live_output:
@@ -301,7 +429,7 @@ class LCKModule:
 
 def main():
     """Main entry point"""
-    module = LCKModule()
+    module = LolModule()
     module.display()
 
 

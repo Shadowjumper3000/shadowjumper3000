@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# LCK Scores Display - Main entry point
-# Fetches live and upcoming LCK match data and displays via Waybar
+# LoL Esports Scores Display - Main entry point
+# Fetches live and upcoming match data for all LoL Esports regions and displays via Waybar
 
 set -euo pipefail
 
@@ -15,17 +15,17 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
 fi
 
 # Set defaults if not in .env
-CACHE_DIR="${LCK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lck-scores}"
-API_BASE="${LCK_API_BASE:-https://esports-api.lolesports.com/persisted/gw}"
-LIVE_ENDPOINT="${LCK_LIVE_ENDPOINT:-$API_BASE/getLive?hl=en-US}"
-SCHEDULE_ENDPOINT="${LCK_SCHEDULE_ENDPOINT:-$API_BASE/getSchedule?hl=en-US}"
-API_KEY="${LCK_API_KEY:-0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z}"
-LIVE_CACHE_TTL="${LCK_LIVE_CACHE_TTL:-30}"
-SCHEDULE_CACHE_TTL="${LCK_SCHEDULE_CACHE_TTL:-60}"
-CURL_TIMEOUT="${LCK_CURL_TIMEOUT:-10}"
+CACHE_DIR="${CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores}"
+API_BASE="${API_BASE:-https://esports-api.lolesports.com/persisted/gw}"
+LIVE_ENDPOINT="${LIVE_ENDPOINT:-$API_BASE/getLive?hl=en-US}"
+SCHEDULE_ENDPOINT="${SCHEDULE_ENDPOINT:-$API_BASE/getSchedule?hl=en-US}"
+API_KEY="${API_KEY:-0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z}"
+LIVE_CACHE_TTL="${LIVE_CACHE_TTL:-30}"
+SCHEDULE_CACHE_TTL="${SCHEDULE_CACHE_TTL:-60}"
+CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
 
-LIVE_CACHE="$CACHE_DIR/lck-live-games.json"
-SCHEDULE_CACHE="$CACHE_DIR/lck-data.json"
+LIVE_CACHE="$CACHE_DIR/lol-live-games.json"
+SCHEDULE_CACHE="$CACHE_DIR/lol-data.json"
 mkdir -p "$CACHE_DIR"
 
 # Build curl options
@@ -70,4 +70,4 @@ fetch_api "$SCHEDULE_ENDPOINT" "$SCHEDULE_CACHE" "$SCHEDULE_CACHE_TTL" >/dev/nul
 wait
 
 # Run Python module to display
-python3 "$SCRIPT_DIR/lck_module.py"
+python3 "$SCRIPT_DIR/lol_module.py"

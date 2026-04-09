@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Enhanced LCK Scores Fetcher with detailed information
-# Shows full match details with team records and game state
+# LoL Detailed Scores Fetcher
+# Shows full match details with team records and game state across all regions
 
 set -euo pipefail
 
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/lck-scores"
-CACHE_FILE="$CACHE_DIR/lck-data-detailed.json"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores"
+CACHE_FILE="$CACHE_DIR/lol-data-detailed.json"
 CACHE_TTL=60
 
 mkdir -p "$CACHE_DIR"
@@ -37,33 +37,34 @@ fetch_schedule() {
     echo "$response"
 }
 
-# Parse and display detailed LCK information
-display_lck_detailed() {
+# Parse and display detailed LoL Esports information
+display_lol_detailed() {
     local json_data="$1"
 
     echo "╔════════════════════════════════════════╗"
-    echo "║     LCK (League Champions Korea)       ║"
+    echo "║         LoL Esports - Detailed         ║"
     echo "╚════════════════════════════════════════╝"
     echo ""
 
     local found_games=false
 
-    # Find matches
-    echo "$json_data" | jq -r '.data.schedule[]? | 
-        select(.league == "lck") |
-        select(.status != "completed") |
-        "\(.team1.code)|\(.team2.code)|\(.status)|\(.begin_at)|\(.team1_result.game_count // 0)|\(.team2_result.game_count // 0)"' 2>/dev/null | while IFS='|' read -r team1 team2 status begin_at score1 score2; do
+    # Find matches (generic across leagues) - adapt jq to API structure
+    echo "$json_data" | jq -r '.data.schedule.events[]? |
+        select(.match != null) |
+        select(.state != "completed") |
+        "\(.league.name)//\(.match.teams[0].code)//\(.match.teams[1].code)//\(.state)//\(.startTime)//\(.match.teams[0].result.gameWins // 0)//\(.match.teams[1].result.gameWins // 0)"' 2>/dev/null | while IFS='//' read -r league team1 team2 state begin_at score1 score2; do
         found_games=true
-        
+
+        echo "League: $league"
         echo "Team 1: $team1 | Team 2: $team2"
         echo "Score: $score1 - $score2"
-        echo "Status: $status"
-        echo "Begin: $begin_at"
+        echo "State: $state"
+        echo "Start: $begin_at"
         echo "────────────────────────────────────────"
     done
 
     if ! $found_games; then
-        echo "No active LCK matches at this time."
+        echo "No active matches at this time."
     fi
 }
 
@@ -73,11 +74,11 @@ main() {
     json_data=$(fetch_schedule)
 
     if [[ -z "$json_data" || "$json_data" == "{}" ]]; then
-        echo "Failed to fetch LCK data"
+        echo "Failed to fetch data"
         exit 1
     fi
 
-    display_lck_detailed "$json_data"
+    display_lol_detailed "$json_data"
 }
 
 main
