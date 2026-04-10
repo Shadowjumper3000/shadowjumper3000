@@ -15,7 +15,7 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
 fi
 
 # Set defaults if not in .env
-CACHE_DIR="${CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores}"
+export CACHE_DIR="${CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores}"
 API_BASE="${API_BASE:-https://esports-api.lolesports.com/persisted/gw}"
 LIVE_ENDPOINT="${LIVE_ENDPOINT:-$API_BASE/getLive?hl=en-US}"
 SCHEDULE_ENDPOINT="${SCHEDULE_ENDPOINT:-$API_BASE/getSchedule?hl=en-US}"
@@ -69,5 +69,5 @@ fetch_api "$LIVE_ENDPOINT" "$LIVE_CACHE" "$LIVE_CACHE_TTL" >/dev/null &
 fetch_api "$SCHEDULE_ENDPOINT" "$SCHEDULE_CACHE" "$SCHEDULE_CACHE_TTL" >/dev/null &
 wait
 
-# Run Python module to display
-python3 "$SCRIPT_DIR/lol_module.py"
+# Run Python module to display with explicit environment
+CACHE_DIR="$CACHE_DIR" python3 "$SCRIPT_DIR/lol_module.py"

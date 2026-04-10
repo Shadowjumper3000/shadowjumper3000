@@ -194,12 +194,12 @@ class LolModule:
             ):
                 if curr_gw1 > prev_gw1:
                     self.send_notification(
-                        f"🎮 {match['t1_code']} wins a game!",
+                        f"{match['t1_code']} wins a game!",
                         f"{match['t1_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
                     )
                 if curr_gw2 > prev_gw2:
                     self.send_notification(
-                        f"🎮 {match['t2_code']} wins a game!",
+                        f"{match['t2_code']} wins a game!",
                         f"{match['t2_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
                     )
 
@@ -312,41 +312,32 @@ class LolModule:
         selected_idx = self.get_selected_match_index(live_matches)
         selected = live_matches[selected_idx]
 
-        # Get primary block name from selected match
-        block_name = selected.get("block_name", "Live")
+        # Group all matches by league
+        by_league = {}
+        for match in live_matches:
+            league = match["league"]
+            if league not in by_league:
+                by_league[league] = []
+            by_league[league].append(match)
 
-        # Build main tooltip - selected game info
-        selected_tooltip = f"{selected['t1_name']} ({selected['t1_code']}, {selected['rec1'][0]}-{selected['rec1'][1]}) vs {selected['t2_name']} ({selected['t2_code']}, {selected['rec2'][0]}-{selected['rec2'][1]})"
+        # Build tooltip with league categories
+        tooltip_lines = []
 
-        tooltip_lines = [selected_tooltip]
-
-        # Show if there are other matches
-        if len(live_matches) > 1:
-            # Group other matches by league
-            by_league = {}
-            for match in live_matches:
-                if match["id"] != selected["id"]:
-                    league = match["league"]
-                    if league not in by_league:
-                        by_league[league] = []
-                    by_league[league].append(match)
-
-            tooltip_lines.append("")
-            tooltip_lines.append("Other Matches:")
-
-            # Add matches grouped by league
-            for league in sorted(by_league.keys()):
-                for idx, match in enumerate(by_league[league], 1):
-                    tooltip_lines.append(
-                        f"{league}: {match['t1_code']} [{match['gw1']}] vs [{match['gw2']}] {match['t2_code']}"
-                    )
-
-            tooltip_lines.append("")
-            tooltip_lines.append("(Right-click to switch)")
+        # Add matches grouped by league
+        for league in sorted(by_league.keys()):
+            # Format league as highlighted category header with single bar
+            header = f"━ {league}"
+            tooltip_lines.append(header)
+            for match in by_league[league]:
+                # Mark selected match with *
+                marker = "*" if match["id"] == selected["id"] else " "
+                tooltip_lines.append(
+                    f"{marker} {match['t1_code']} [{match['gw1']}] vs [{match['gw2']}] {match['t2_code']}"
+                )
 
         return {
             "text": selected["display"],
-            "tooltip": self.center_text(f"{block_name}\n" + "\n".join(tooltip_lines)),
+            "tooltip": "\n".join(tooltip_lines),
             "class": "lol-live",
         }
 

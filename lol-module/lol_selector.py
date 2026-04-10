@@ -18,6 +18,7 @@ class LolMatchSelector:
         )
         self.live_cache = os.path.join(self.cache_dir, "lol-live-games.json")
         self.selection_file = os.path.join(self.cache_dir, "selected-match.txt")
+        self.debug = True
 
     @staticmethod
     def _load_json(filepath):
@@ -25,12 +26,17 @@ class LolMatchSelector:
         try:
             with open(filepath) as f:
                 return json.load(f)
-        except:
+        except Exception as e:
+            print(f"Debug: Failed to load {filepath}: {e}", file=sys.stderr)
             return {}
 
     def get_live_matches(self):
         """Extract all live matches across all regions"""
         data = self._load_json(self.live_cache)
+
+        if self.debug:
+            print(f"Debug: Using cache_dir: {self.cache_dir}", file=sys.stderr)
+            print(f"Debug: Live cache path: {self.live_cache}", file=sys.stderr)
 
         matches = []
         for event in data.get("data", {}).get("schedule", {}).get("events", []):
@@ -60,6 +66,8 @@ class LolMatchSelector:
                 }
             )
 
+        if self.debug:
+            print(f"Debug: Found {len(matches)} live matches", file=sys.stderr)
         return matches
 
     def toggle_to_next(self):
@@ -67,7 +75,8 @@ class LolMatchSelector:
         matches = self.get_live_matches()
 
         if not matches:
-            print("No live matches")
+            if self.debug:
+                print("Debug: No live matches found", file=sys.stderr)
             return False
 
         # Get current selection
@@ -76,23 +85,46 @@ class LolMatchSelector:
             try:
                 with open(self.selection_file) as f:
                     selected_id = f.read().strip()
+                if self.debug:
+                    print(
+                        f"Debug: Current selection file contains: {selected_id}",
+                        file=sys.stderr,
+                    )
                 for i, m in enumerate(matches):
                     if m["id"] == selected_id:
                         current_idx = i
                         break
-            except:
-                pass
+            except Exception as e:
+                if self.debug:
+                    print(f"Debug: Error reading selection file: {e}", file=sys.stderr)
+        else:
+            if self.debug:
+                print(
+                    f"Debug: Selection file doesn't exist: {self.selection_file}",
+                    file=sys.stderr,
+                )
 
         # Toggle to next match
         next_idx = (current_idx + 1) % len(matches)
         next_match_id = matches[next_idx]["id"]
 
+        if self.debug:
+            print(
+                f"Debug: Toggling from index {current_idx} to {next_idx}",
+                file=sys.stderr,
+            )
+            print(f"Debug: New match ID: {next_match_id}", file=sys.stderr)
+
         try:
             with open(self.selection_file, "w") as f:
                 f.write(next_match_id)
             print(f"Switched to: {matches[next_idx]['display']}")
+            if self.debug:
+                print(f"Debug: Successfully wrote selection file", file=sys.stderr)
             return True
-        except:
+        except Exception as e:
+            if self.debug:
+                print(f"Debug: Error writing selection file: {e}", file=sys.stderr)
             return False
 
 

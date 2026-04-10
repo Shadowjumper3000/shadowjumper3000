@@ -4,55 +4,80 @@
 
 set -euo pipefail
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_FILE="/tmp/lol-selector-$(date +%s).log"
 
-# Load environment configuration
-if [[ -f "$SCRIPT_DIR/.env" ]]; then
-    set -a
-    source "$SCRIPT_DIR/.env"
-    set +a
-fi
-
-# Run match selector Python module
-python3 "$SCRIPT_DIR/lol_selector.py"
-
-# Refresh waybar to show updated match
-pkill -RTMIN+1 waybar 2>/dev/null || true
-    local selected=""
+{
+    echo "=== Handler started at $(date) ==="
+    echo "PWD: $PWD"
+    echo "USER: $USER"
+    echo "Home: $HOME"
+    echo "PATH: $PATH"
     
-    if command -v rofi &> /dev/null; then
-        selected=$(echo -e "$menu_options" | rofi -dmenu -p "Select Match:" -lines $match_count)
-    elif command -v dmenu &> /dev/null; then
-        selected=$(echo -e "$menu_options" | dmenu -p "Select Match:")
+    # Get script directory
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "Script dir: $SCRIPT_DIR"
+    
+    # Load environment configuration
+    if [[ -f "$SCRIPT_DIR/.env" ]]; then
+        echo "Loading .env from $SCRIPT_DIR/.env"
+        set -a
+        source "$SCRIPT_DIR/.env"
+        set +a
     else
-        # Fallback: just show notification with all matches
-        notify-send "LoL Esports" "Available matches:\n$menu_options" -u normal
-        exit 1
+        echo "No .env file found at $SCRIPT_DIR/.env"
     fi
     
-    if [[ -n "$selected" ]]; then
-        # Find which match was selected
-        local selected_num=$(echo -e "$menu_options" | grep -n "^$selected$" | cut -d':' -f1 | head -1)
-        if [[ -n "$selected_num" ]]; then
-            selected_num=$((selected_num - 1))
-            if [[ -n "${match_map[$selected_num]:-}" ]]; then
-                echo "${match_map[$selected_num]}" > "$SELECTION_FILE"
-                notify-send "LoL Esports" "Now showing: $selected" -u low
-            fi
-        fi
+    # Set defaults if not in .env
+    CACHE_DIR="${CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores}"
+    echo "Cache dir: $CACHE_DIR"
+    
+    # Verify cache directory exists
+    if [[ ! -d "$CACHE_DIR" ]]; then
+        echo "Cache dir doesn't exist, creating it"
+        mkdir -p "$CACHE_DIR"
     fi
     
-    # Refresh waybar
-    pkill -RTMIN+1 waybar 2>/dev/null || true
-}
+    # Check live cache
+    LIVE_CACHE="$CACHE_DIR/lol-live-games.json"
+    echo "Live cache: $LIVE_CACHE"
+    if [[ -f "$LIVE_CACHE" ]]; then
+        echo "Live cache exists, size: $(stat -c%s "$LIVE_CACHE" 2>/dev/null || stat -f%z "$LIVE_CACHE")"
+    else
+        echo "Live cache does NOT exist"
+    fi
+    
+    # Check selection file
+    SELECTION_FILE="$CACHE_DIR/selected-match.txt"
+    echo "Selection file: $SELECTION_FILE"
+    if [[ -f "$SELECTION_FILE" ]]; then
+        echo "Current selection: $(cat "$SELECTION_FILE")"
+    else
+        echo "No current selection"
+    fi
+    
+    echo ""
+    echo "=== Running selector ==="
+    
+    # Run match selector Python module to toggle to next match
+    export CACHE_DIR="$CACHE_DIR"
+    python3 "$SCRIPT_DIR/lol_selector.py" 2>&1
+    
+    echo ""
+    echo "=== After selector ==="
+    if [[ -f "$SELECTION_FILE" ]]; then
+        echo "New selection: $(cat "$SELECTION_FILE")"
+    fi
+    
+    echo ""
+    echo "=== Refreshing waybar ==="
+    
+    # Refresh waybar - try multiple methods
+    pkill -RTMIN+1 waybar 2>&1 || echo "pkill RTMIN+1 failed"
+    sleep 0.2
+    pkill -HUP -f waybar 2>&1 || echo "pkill HUP failed"
+    
+    echo "=== Handler completed at $(date) ==="
+    
+} > "$LOG_FILE" 2>&1
 
-# Main
-matches=$(get_live_matches)
-
-if [[ -z "$matches" ]]; then
-    notify-send "LoL Esports" "No live matches" -u low
-    exit 1
-fi
-
-show_menu "$matches"
+echo "Logs written to: $LOG_FILE"
