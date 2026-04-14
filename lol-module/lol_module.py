@@ -7,6 +7,8 @@ Handles fetching and processing match data from the LoL Esports API for all regi
 import json
 import os
 import subprocess
+import time
+import hashlib
 from datetime import datetime, timezone
 
 
@@ -22,12 +24,20 @@ class LolModule:
         self.schedule_cache = os.path.join(self.cache_dir, "lol-data.json")
         self.selection_file = os.path.join(self.cache_dir, "selected-match.txt")
         self.state_cache = os.path.join(self.cache_dir, "match-state.json")
+        self.notification_dedupe_dir = os.path.join(
+            self.cache_dir, "notification-dedupe"
+        )
+        self.notification_dedupe_ttl = int(
+            os.environ.get("NOTIFICATION_DEDUPE_TTL", 21600)
+        )
 
         os.makedirs(self.cache_dir, exist_ok=True)
+        os.makedirs(self.notification_dedupe_dir, exist_ok=True)
 
         self.live_data = self._load_json(self.live_cache)
         self.sched_data = self._load_json(self.schedule_cache)
         self.previous_state = self._load_json(self.state_cache)
+        self._cleanup_notification_keys()
 
     @staticmethod
     def _load_json(filepath):
@@ -138,8 +148,44 @@ class LolModule:
         except:
             return None
 
-    def send_notification(self, title, body):
+    def _cleanup_notification_keys(self):
+        """Remove stale dedupe files so cache doesn't grow forever"""
+        try:
+            now = time.time()
+            for name in os.listdir(self.notification_dedupe_dir):
+                path = os.path.join(self.notification_dedupe_dir, name)
+                try:
+                    if now - os.path.getmtime(path) > self.notification_dedupe_ttl:
+                        os.remove(path)
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+    def _claim_notification_key(self, dedupe_key):
+        """Atomically claim dedupe key; return True only for first claimant"""
+        if not dedupe_key:
+            return True
+
+        key_hash = hashlib.sha1(dedupe_key.encode("utf-8")).hexdigest()
+        key_path = os.path.join(self.notification_dedupe_dir, key_hash)
+
+        try:
+            fd = os.open(key_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(fd, "w") as f:
+                f.write(str(int(time.time())))
+            return True
+        except FileExistsError:
+            return False
+        except Exception:
+            # Fail open to avoid losing notifications on filesystem errors.
+            return True
+
+    def send_notification(self, title, body, dedupe_key=None):
         """Send desktop notification using notify-send"""
+        if not self._claim_notification_key(dedupe_key):
+            return
+
         try:
             subprocess.run(
                 ["notify-send", "-u", "normal", title, body], check=False, timeout=2
@@ -178,12 +224,14 @@ class LolModule:
                     self.send_notification(
                         f"🏆 {match['t1_name']} WINS THE MATCH!",
                         f"{match['t1_name']} defeats {match['t2_name']}\nFinal: {curr_gw1}-{curr_gw2}",
+                        dedupe_key=f"match-victory:{match_id}:t1:{curr_gw1}-{curr_gw2}",
                     )
                     match_victory = True
                 if curr_gw2 >= 2 and prev_gw2 < 2:
                     self.send_notification(
                         f"🏆 {match['t2_name']} WINS THE MATCH!",
                         f"{match['t2_name']} defeats {match['t1_name']}\nFinal: {curr_gw1}-{curr_gw2}",
+                        dedupe_key=f"match-victory:{match_id}:t2:{curr_gw1}-{curr_gw2}",
                     )
                     match_victory = True
 
@@ -196,11 +244,13 @@ class LolModule:
                     self.send_notification(
                         f"{match['t1_code']} wins a game!",
                         f"{match['t1_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                        dedupe_key=f"game-win:{match_id}:t1:{curr_gw1}-{curr_gw2}",
                     )
                 if curr_gw2 > prev_gw2:
                     self.send_notification(
                         f"{match['t2_code']} wins a game!",
                         f"{match['t2_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                        dedupe_key=f"game-win:{match_id}:t2:{curr_gw1}-{curr_gw2}",
                     )
 
     def get_live_matches(self):
