@@ -1,0 +1,24 @@
+/* Waybar style rules for custom/anime module */
+
+#custom-anime {
+  margin: 0 8px;
+  padding: 0 12px;
+  border-radius: 8px;
+  min-width: 120px;
+  background: rgba(60, 90, 140, 0.22);
+  color: #d8ebff;
+}
+
+#custom-anime.has-updates {
+  background: rgba(64, 125, 70, 0.35);
+  color: #e6ffea;
+}
+
+#custom-anime.hidden {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+}

@@ -1,0 +1,14 @@
+// Waybar custom module config for MAL unwatched new episodes.
+// Add this block into ~/.config/waybar/config.jsonc
+
+{
+  "custom/anime": {
+    "format": "{}",
+    "exec": "$HOME/dev/shadowjumper3000/anime-module/anime-updates.sh",
+    "interval": 600,
+    "return-type": "json",
+    "on-click": "xdg-open 'https://myanimelist.net/animelist' &",
+    "tooltip": true,
+    "class": "anime-module"
+  }
+}
