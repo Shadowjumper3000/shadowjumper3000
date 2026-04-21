@@ -1,0 +1,19 @@
+// Waybar GitHub PR Tracker Module
+// - Tracks open pull requests involving your GitHub user
+// - Right-click to cycle between tracked PRs
+// - Hover to see PRs grouped by repository
+// - Notifies on new PRs / review requests (deduped)
+//
+// Add this to your ~/.config/waybar/config.jsonc
+
+{
+  "custom/github-pr": {
+    "format": "{}",
+    "exec": "$HOME/dev/shadowjumper3000/github-pr-module/github-pr.sh",
+    "interval": 30,
+    "return-type": "json",
+    "on-click": "xdg-open 'https://github.com/pulls' &",
+    "on-right-click": "$HOME/dev/shadowjumper3000/github-pr-module/github-pr-select.sh",
+    "class": "github-pr-module"
+  }
+}

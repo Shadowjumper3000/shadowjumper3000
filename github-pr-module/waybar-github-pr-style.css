@@ -1,0 +1,17 @@
+/* Waybar GitHub PR Module Styling
+  Add this to your ~/.config/waybar/style.css
+*/
+
+/* GitHub PR Tracker Module Base (mirrors LoL module spacing) */
+#custom-github-pr {
+  margin: 0 10px;
+  padding: 0 15px;
+  border-radius: 8px;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Highlight when selected PR needs your review */
+#custom-github-pr.github-pr-review {
+  font-weight: 700;
+}
