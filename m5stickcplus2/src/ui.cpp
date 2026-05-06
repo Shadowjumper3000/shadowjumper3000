@@ -100,6 +100,29 @@ void drawRemoteScreen() {
   drawBatteryAndStatus(height - 22);
 }
 
+void drawIrRemoteScreen() {
+  const int width = M5.Display.width();
+  const int height = M5.Display.height();
+
+  M5.Display.fillScreen(TFT_BLACK);
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(TFT_ORANGE, TFT_BLACK);
+  M5.Display.setCursor(4, 4);
+  M5.Display.print("IR Remote");
+  M5.Display.drawFastHLine(0, 24, width, TFT_DARKGREY);
+
+  M5.Display.setTextSize(1);
+  M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+  M5.Display.setCursor(8, 34);
+  M5.Display.print("A : Power");
+  M5.Display.setCursor(8, 50);
+  M5.Display.print("B : Volume Up");
+  M5.Display.setCursor(8, 66);
+  M5.Display.print("PWR : Exit remote");
+
+  drawBatteryAndStatus(height - 10);
+}
+
 void drawMusicRemoteScreen() {
   const int width = M5.Display.width();
   const int height = M5.Display.height();
@@ -140,6 +163,8 @@ void renderUi(bool force) {
     drawRemoteScreen();
   } else if (g_view == View::MusicRemote) {
     drawMusicRemoteScreen();
+  } else if (g_view == View::IRRemote) {
+    drawIrRemoteScreen();
   } else {
     drawMenuScreen();
   }

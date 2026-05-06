@@ -66,6 +66,40 @@ void handleMusicAction(uint8_t index) {
   goBackOneLevel();
 }
 
+void handleIrAction(uint8_t index) {
+  switch (index) {
+    case 0:
+      sendIrCode(0x20DF10EF, 32, 0, "TV Power sent");
+      break;
+    case 1:
+      sendIrCode(0x20DF40BF, 32, 0, "Volume Up sent");
+      break;
+    case 2:
+      sendIrCode(0x20DFC03F, 32, 0, "Volume Down sent");
+      break;
+    case 3:
+      sendIrCode(0x20DF906F, 32, 0, "Mute sent");
+      break;
+    default:
+      goBackOneLevel();
+      break;
+  }
+}
+
+void handleWifiAction(uint8_t index) {
+  switch (index) {
+    case 0:
+      startWifiPortal();
+      break;
+    case 1:
+      stopWifiPortal();
+      break;
+    default:
+      goBackOneLevel();
+      break;
+  }
+}
+
 }  // namespace
 
 void sendSlideCommand(uint8_t keyCode, const char* successText) {
@@ -121,6 +155,22 @@ void goBackOneLevel() {
     return;
   }
 
+  if (g_view == View::IRRemote) {
+    g_view = View::IR;
+    g_submenuUiDirty = true;
+    setStatus("IR menu");
+    renderUi(true);
+    return;
+  }
+
+  if (g_view == View::WifiPortal) {
+    g_view = View::Wifi;
+    g_submenuUiDirty = true;
+    setStatus("WiFi menu");
+    renderUi(true);
+    return;
+  }
+
   g_view = View::Main;
   g_mainUiDirty = true;
   g_submenuUiDirty = true;
@@ -139,8 +189,12 @@ void advanceSelection() {
     case View::Power: g_powerIndex = next; break;
     case View::PowerPoint: g_ppIndex = next; break;
     case View::Music: g_musicIndex = next; break;
+    case View::IR: g_irIndex = next; break;
+    case View::Wifi: g_wifiIndex = next; break;
     case View::SlideDeckRemote:
     case View::MusicRemote:
+    case View::IRRemote:
+    case View::WifiPortal:
       break;
   }
 
@@ -179,7 +233,9 @@ void activateCurrentItem() {
       if (index == 0) g_view = View::Bluetooth;
       else if (index == 1) g_view = View::Power;
       else if (index == 2) g_view = View::PowerPoint;
-      else g_view = View::Music;
+      else if (index == 3) g_view = View::Music;
+      else if (index == 4) g_view = View::IR;
+      else g_view = View::Wifi;
       g_mainUiDirty = true;
       g_submenuUiDirty = true;
       setStatus(menuTitleForView(g_view));
@@ -200,8 +256,18 @@ void activateCurrentItem() {
       if (submenuActionIsReturn(g_view, index)) goBackOneLevel();
       else handleMusicAction(index);
       break;
+    case View::IR:
+      if (submenuActionIsReturn(g_view, index)) goBackOneLevel();
+      else handleIrAction(index);
+      break;
+    case View::Wifi:
+      if (submenuActionIsReturn(g_view, index)) goBackOneLevel();
+      else handleWifiAction(index);
+      break;
     case View::SlideDeckRemote:
     case View::MusicRemote:
+    case View::IRRemote:
+    case View::WifiPortal:
       break;
   }
 
@@ -224,6 +290,11 @@ void processInput(bool btnA, bool btnB, bool btnPwr) {
 
   if (g_view == View::MusicRemote) {
     handleMusicRemoteInput(btnA, btnB, btnPwr);
+    return;
+  }
+
+  if (g_view == View::IRRemote) {
+    handleIrRemoteInput(btnA, btnB, btnPwr);
     return;
   }
 

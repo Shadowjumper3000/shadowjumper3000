@@ -42,6 +42,7 @@ void loop() {
   }
 
   processInput(btnA, btnB, btnPwr);
+  handleWifiClient();
   applyIdlePowerPolicy();
   renderUi(false);
   M5.delay(12);
