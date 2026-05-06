@@ -4,11 +4,11 @@ LoL Esports Module - Core Display Logic
 Handles fetching and processing match data from the LoL Esports API for all regions/leagues
 """
 
+import hashlib
 import json
 import os
 import subprocess
 import time
-import hashlib
 from datetime import datetime, timezone
 
 
@@ -22,7 +22,6 @@ class LolModule:
         )
         self.live_cache = os.path.join(self.cache_dir, "lol-live-games.json")
         self.schedule_cache = os.path.join(self.cache_dir, "lol-data.json")
-        self.selection_file = os.path.join(self.cache_dir, "selected-match.txt")
         self.state_cache = os.path.join(self.cache_dir, "match-state.json")
         self.notification_dedupe_dir = os.path.join(
             self.cache_dir, "notification-dedupe"
@@ -38,6 +37,11 @@ class LolModule:
         self.sched_data = self._load_json(self.schedule_cache)
         self.previous_state = self._load_json(self.state_cache)
         self._cleanup_notification_keys()
+
+        # Load excluded leagues from configuration file (JSON list) or env var
+        # EXCLUDED_LEAGUES_FILE can point to a JSON file with an array of league
+        # names. If not provided, fall back to the bundled excluded_leagues.json.
+        self.excluded_leagues = self._load_excluded_leagues()
 
     @staticmethod
     def _load_json(filepath):
@@ -162,6 +166,27 @@ class LolModule:
         except Exception:
             pass
 
+    def _load_excluded_leagues(self):
+        """Load excluded leagues from JSON file.
+
+        The path can be overridden with the EXCLUDED_LEAGUES_FILE environment
+        variable. If the file cannot be read or is invalid, return an empty set.
+        Values are normalized to lowercase for comparison.
+        """
+        # Determine default path next to this file
+        default_path = os.path.join(self.config_dir, "excluded_leagues.json")
+        path = os.environ.get("EXCLUDED_LEAGUES_FILE", default_path)
+
+        try:
+            with open(path) as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                return {str(x).strip().lower() for x in data if x}
+        except Exception:
+            # Fail silently and return empty set
+            return set()
+        return set()
+
     def _claim_notification_key(self, dedupe_key):
         """Atomically claim dedupe key; return True only for first claimant"""
         if not dedupe_key:
@@ -241,15 +266,19 @@ class LolModule:
                 and os.environ.get("NOTIFY_GAME_WINS", "true").lower() == "true"
             ):
                 if curr_gw1 > prev_gw1:
+                    # Include the game number in the title, but keep the body small
+                    # (remove the explicit "wins Game X" line to shorten notifications)
                     self.send_notification(
-                        f"{match['t1_code']} wins a game!",
-                        f"{match['t1_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                        f"{match['t1_code']} wins Game {match['game_num']}!",
+                        f"Series: {curr_gw1}-{curr_gw2}",
                         dedupe_key=f"game-win:{match_id}:t1:{curr_gw1}-{curr_gw2}",
                     )
                 if curr_gw2 > prev_gw2:
+                    # Include the game number in the title, but keep the body small
+                    # (remove the explicit "wins Game X" line to shorten notifications)
                     self.send_notification(
-                        f"{match['t2_code']} wins a game!",
-                        f"{match['t2_name']} wins Game {match['game_num']}\nSeries: {curr_gw1}-{curr_gw2}",
+                        f"{match['t2_code']} wins Game {match['game_num']}!",
+                        f"Series: {curr_gw1}-{curr_gw2}",
                         dedupe_key=f"game-win:{match_id}:t2:{curr_gw1}-{curr_gw2}",
                     )
 
@@ -261,6 +290,9 @@ class LolModule:
         for event in self.get_events(self.live_data):
             league = event.get("league", {})
             lname = league.get("name", "") if isinstance(league, dict) else ""
+            # Skip excluded leagues
+            if lname and self._is_excluded_league(lname):
+                continue
             status = event.get("state", "").lower()
 
             # Skip if not in progress
@@ -315,6 +347,10 @@ class LolModule:
             league = event.get("league", {})
             lname = league.get("name", "") if isinstance(league, dict) else ""
 
+            # Skip excluded leagues
+            if lname and self._is_excluded_league(lname):
+                continue
+
             dt = self.parse_iso(event.get("startTime"))
             state = event.get("state", "").lower()
 
@@ -336,20 +372,32 @@ class LolModule:
 
         return (next_dt, next_event, next_league), upcoming_matches
 
-    def get_selected_match_index(self, live_matches):
-        """Get the index of the selected match or default to 0"""
-        selected_idx = 0
-        if os.path.exists(self.selection_file):
-            try:
-                with open(self.selection_file) as f:
-                    selected_id = f.read().strip()
-                for i, m in enumerate(live_matches):
-                    if m["id"] == selected_id:
-                        selected_idx = i
-                        break
-            except:
-                pass
-        return selected_idx
+    def _is_excluded_league(self, league_name):
+        """Return True if the league should be filtered out.
+
+        This does a case-insensitive check against a small set of names and
+        also handles minor variations by checking for key substrings (to
+        tolerate accents/word differences).
+        """
+        if not league_name:
+            return False
+        n = league_name.strip().lower()
+
+        # Direct match
+        if n in self.excluded_leagues:
+            return True
+
+        # Keyword-based fuzzy matching for common variations
+        if "rift" in n and "legend" in n:
+            return True
+        if "ligue" in n and ("franc" in n or "française" in n):
+            return True
+        if "arab" in n:
+            return True
+
+        return False
+
+    # Selection feature has been removed; Waybar now shows count of live games
 
     def output_live_match(self):
         """Output live match information as JSON"""
@@ -358,38 +406,29 @@ class LolModule:
         if not live_matches:
             return None
 
-        # Get selected match
-        selected_idx = self.get_selected_match_index(live_matches)
-        selected = live_matches[selected_idx]
+        # Show count of live games in the main display
+        games_count = len(live_matches)
+        text = f"{games_count} game{'s' if games_count != 1 else ''} live"
 
-        # Group all matches by league
+        # Group all matches by league for the tooltip
         by_league = {}
         for match in live_matches:
-            league = match["league"]
+            league = match.get("league", "")
             if league not in by_league:
                 by_league[league] = []
             by_league[league].append(match)
 
-        # Build tooltip with league categories
+        # Build tooltip with league categories (keep previous detailed formatting)
         tooltip_lines = []
-
-        # Add matches grouped by league
         for league in sorted(by_league.keys()):
-            # Format league as highlighted category header with single bar
             header = f"━ {league}"
             tooltip_lines.append(header)
             for match in by_league[league]:
-                # Mark selected match with *
-                marker = "*" if match["id"] == selected["id"] else " "
                 tooltip_lines.append(
-                    f"{marker} {match['t1_code']} [{match['gw1']}] vs [{match['gw2']}] {match['t2_code']}"
+                    f"  {match['t1_code']} [{match['gw1']}] vs [{match['gw2']}] {match['t2_code']}"
                 )
 
-        return {
-            "text": selected["display"],
-            "tooltip": "\n".join(tooltip_lines),
-            "class": "lol-live",
-        }
+        return {"text": text, "tooltip": "\n".join(tooltip_lines), "class": "lol-live"}
 
     def output_upcoming_match(self):
         """Output upcoming match information as JSON"""

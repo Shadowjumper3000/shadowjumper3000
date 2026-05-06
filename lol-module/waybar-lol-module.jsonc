@@ -16,7 +16,6 @@
     "interval": 10,
     "return-type": "json",
     "on-click": "xdg-open 'https://watch.lolesports.com' &",
-    "on-right-click": "$HOME/dev/shadowjumper3000/lol-module/lol-select-match.sh",
     "class": "lol-module"
   }
 }
