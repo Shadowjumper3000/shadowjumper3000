@@ -1,97 +1,40 @@
-<!--
-  ╔══════════════════════════════════════════════════════════════════════════╗
-  ║                        SHADOWJUMPER3000                                ║
-  ╚══════════════════════════════════════════════════════════════════════════╝
--->
-
-<div align="center">
-
-```
- ███████╗██╗  ██╗ █████╗ ██████╗  ██████╗ ██╗    ██╗
- ██╔════╝██║  ██║██╔══██╗██╔══██╗██╔═══██╗██║    ██║
- ███████╗███████║███████║██║  ██║██║   ██║██║ █╗ ██║
- ╚════██║██╔══██║██╔══██║██║  ██║██║   ██║██║███╗██║
- ███████║██║  ██║██║  ██║██████╔╝╚██████╔╝╚███╔███╔╝
- ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚══╝╚══╝ 
-
-  ██╗██╗   ██╗███╗   ███╗██████╗ ███████╗██████╗ ██████╗  ██████╗  ██████╗ 
-  ██║██║   ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗╚════██╗██╔═████╗██╔═████╗
-  ██║██║   ██║██╔████╔██║██████╔╝█████╗  ██████╔╝ █████╔╝██║██╔██║██║██╔██║
-  ██║██║   ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗ ╚═══██╗████╔╝██║████╔╝██║
-  ██║╚██████╔╝██║ ╚═╝ ██║██║     ███████╗██║  ██║██████╔╝╚██████╔╝╚██████╔╝
-  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝ 
-</pre>
-
-<!-- Badges -->
-<p>
-  <img src="https://img.shields.io/badge/Focus-AI%20%26%20Systems-7B68EE?style=for-the-badge&logo=robot-framework&logoColor=white&labelColor=1a1b27" alt="Focus: AI & Systems" />
-  <img src="https://img.shields.io/badge/OS-Arch%20Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white&labelColor=1a1b27" alt="Arch Linux" />
-  <img src="https://img.shields.io/badge/Editor-Neovim-57A143?style=for-the-badge&logo=neovim&logoColor=white&labelColor=1a1b27" alt="Neovim" />
-</p>
-
-<br />
-
-<!-- Visitor Counter -->
-<p align="center">
-  <img src="https://visitcount.itsvg.in/api?id=Shadowjumper3000&label=Profile%20Views&color=12&icon=5&pretty=true" alt="visitor count" />
-</p>
-
-</div>
+![Focus: Agentic AI & Distributed Systems](https://img.shields.io/badge/Focus-Agentic%20AI%20%26%20Distributed-7B68EE?style=flat-square&logo=robot-framework&logoColor=white&labelColor=1a1b27)
+![Omarchy](https://img.shields.io/badge/OS-Omarchy-1793D1?style=flat-square&logo=linux&logoColor=white&labelColor=1a1b27)
+![Opencode](https://img.shields.io/badge/Editor-Opencode%20AI%20IDE-7B68EE?style=flat-square&logo=robot-framework&logoColor=white&labelColor=1a1b27)
 
 ---
 
-###  About Me
+**CS & AI student.** Exploring agentic AI pipelines, deep reinforcement learning, and distributed computing with federated learning. Building game AI agents and automating Linux infrastructure.
 
-> *Computer Science & Artificial Intelligence student passionate about systems programming,
-> embedded devices, and game algorithms. Building tools that bridge hardware and software.*
-
-- 🔭 **Currently exploring:** embedded systems, real-time data pipelines, Linux ricing
-- 🎮 **Game dev interests:** procedural generation algorithms, game AI, efficient pathfinding
-- 🐧 **Daily driver:** Arch Linux + Hyprland + custom Waybar modules
-- 🧠 **Learning:** Rust, reverse engineering, PCB design
+- 🤖 **Agentic AI** — custom agent brains, tool-use pipelines, LLM routing
+- 🧠 **Deep RL** — policy gradients, multi-agent systems, simulation environments
+- 🌐 **Distributed systems** — federated learning, edge computing, peer-to-peer architectures
+- 🎮 **Game AI** — procedural generation, pathfinding, behavior trees
+- 🐧 **Linux sysadmin** — Omarchy + automation + infrastructure as code
 
 ---
 
-###  Tech Stack
+### Languages & Tools
 
-<!-- Languages -->
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1b27" alt="Python" />
-  <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white&labelColor=1a1b27" alt="C++" />
-  <img src="https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white&labelColor=1a1b27" alt="Bash" />
-  <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white&labelColor=1a1b27" alt="Rust" />
-  <img src="https://img.shields.io/badge/C-A8B9CC?style=for-the-badge&logo=c&logoColor=white&labelColor=1a1b27" alt="C" />
-</p>
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![C++](https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=cplusplus&logoColor=white)
+![C](https://img.shields.io/badge/-C-A8B9CC?style=flat-square&logo=c&logoColor=white)
+![Rust](https://img.shields.io/badge/-Rust-000000?style=flat-square&logo=rust&logoColor=white)
+![Bash](https://img.shields.io/badge/-Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
 
-<!-- Tools & Platforms -->
-<p align="center">
-  <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black&labelColor=1a1b27" alt="Linux" />
-  <img src="https://img.shields.io/badge/ESP32-E7352C?style=for-the-badge&logo=espressif&logoColor=white&labelColor=1a1b27" alt="ESP32" />
-  <img src="https://img.shields.io/badge/PlatformIO-FF7F00?style=for-the-badge&logo=platformio&logoColor=white&labelColor=1a1b27" alt="PlatformIO" />
-  <img src="https://img.shields.io/badge/Hyprland-58E1FF?style=for-the-badge&logo=hyprland&logoColor=white&labelColor=1a1b27" alt="Hyprland" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white&labelColor=1a1b27" alt="Docker" />
-  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white&labelColor=1a1b27" alt="Git" />
-</p>
+![Linux](https://img.shields.io/badge/-Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
+![ESP32](https://img.shields.io/badge/-ESP32-E7352C?style=flat-square&logo=espressif&logoColor=white)
+![PlatformIO](https://img.shields.io/badge/-PlatformIO-FF7F00?style=flat-square&logo=platformio&logoColor=white)
+![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Git](https://img.shields.io/badge/-Git-F05032?style=flat-square&logo=git&logoColor=white)
 
 ---
 
-###  GitHub Analytics
+[![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Shadowjumper3000&show_icons=true&include_all_commits=true&count_private=true&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
+[![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Shadowjumper3000&layout=compact&langs_count=8&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
 
-<p align="center">
-  <a href="https://github.com/Shadowjumper3000">
-    <img height="180em" src="https://github-readme-stats.vercel.app/api?username=Shadowjumper3000&show_icons=true&include_all_commits=true&count_private=true&theme=tokyonight&hide_border=true" alt="GitHub Stats" />
-    <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Shadowjumper3000&layout=compact&langs_count=8&theme=tokyonight&hide_border=true" alt="Top Languages" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/Shadowjumper3000">
-    <img src="https://github-readme-streak-stats.herokuapp.com/?user=Shadowjumper3000&theme=tokyonight&hide_border=true" alt="GitHub Streak" />
-  </a>
-</p>
+[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=Shadowjumper3000&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
 
 ---
 
-<div align="center">
-  <sub>⚡ <i>"The best way to predict the future is to build it."</i></sub>
-</div>
+![Profile Views](https://visitcount.itsvg.in/api?id=Shadowjumper3000&label=Profile%20Views&color=12&icon=5&pretty=true)
