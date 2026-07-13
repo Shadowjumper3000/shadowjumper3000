@@ -30,11 +30,7 @@
 
 ---
 
-[![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Shadowjumper3000&show_icons=true&include_all_commits=true&count_private=true&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
-[![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Shadowjumper3000&layout=compact&langs_count=8&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
+![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Shadowjumper3000&show_icons=true&include_all_commits=true&count_private=true&theme=tokyonight&hide_border=true)
 
-[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=Shadowjumper3000&theme=tokyonight&hide_border=true)](https://github.com/Shadowjumper3000)
+![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=Shadowjumper3000&theme=tokyonight&hide_border=true)
 
----
-
-![Profile Views](https://visitcount.itsvg.in/api?id=Shadowjumper3000&label=Profile%20Views&color=12&icon=5&pretty=true)
