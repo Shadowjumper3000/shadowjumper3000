@@ -19,7 +19,8 @@ export CACHE_DIR="${CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/lol-scores}"
 API_BASE="${API_BASE:-https://esports-api.lolesports.com/persisted/gw}"
 LIVE_ENDPOINT="${LIVE_ENDPOINT:-$API_BASE/getLive?hl=en-US}"
 SCHEDULE_ENDPOINT="${SCHEDULE_ENDPOINT:-$API_BASE/getSchedule?hl=en-US}"
-API_KEY="${API_KEY:-0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z}"
+# Require API_KEY from .env or environment — no hardcoded fallback for security
+API_KEY="${API_KEY:-}"
 LIVE_CACHE_TTL="${LIVE_CACHE_TTL:-30}"
 SCHEDULE_CACHE_TTL="${SCHEDULE_CACHE_TTL:-60}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
@@ -27,6 +28,10 @@ CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
 LIVE_CACHE="$CACHE_DIR/lol-live-games.json"
 SCHEDULE_CACHE="$CACHE_DIR/lol-data.json"
 mkdir -p "$CACHE_DIR"
+
+if [[ -z "$API_KEY" ]]; then
+    echo "lol-scores: WARNING — API_KEY not set. API requests may be rate-limited." >&2
+fi
 
 # Build curl options
 CURL_OPTS=( 
